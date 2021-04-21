@@ -28,7 +28,6 @@ library(gridExtra)
 
 ```{r, include=FALSE}
 #Reading in Data
-
 #Rails to Trails
 trails <- read_csv(here::here("data/bicycle_boom_2020.csv"))
 
@@ -50,9 +49,21 @@ npd$Type <- as.factor(npd$Type)
 write_csv(npd, here::here("data/npd.csv"))
 ```
 
+# Introduction
+
+As the covid-19 pandemic confined many people to their houses, and limited the use of public transit for commuters, cities across the world saw an uptake in cycling as both a hobby and alternative form of transportation. This report documents my development of a data driven, scrollytelling website which covers the covid-19 “bicycle boom”, using a combination of text and data visualization. My intention was to create a simple and concise, yet visually appealing and informative story about the surge of interest in cycling. This project is targeted towards a very general audience who may be interested in a quick read about the newfound interest in cycling during the pandemic. The language and graphs used in this project were meant to appeal to a wide range of people with varying experiences as cyclists, from individuals who may not cycle at all, to those who have been cycling for years. In terms of graphs, I selected simple and easily recognizable forms of data visualization so readers can clearly understand the information regardless of their level of statistical literacy. Overall, this project was meant to provide a holistic view of the bicycle boom while providing some higher level commentary on the benefits of cycling both in terms of health and as a form of community and personal engagement, as well as discussing the role of infrastructure and city planning to support the safety of new and existing cyclists. The datasets used in this project were processed in R [@citeR], visualizations were created in R, primarily using the `ggplot` package [@ggplot] along with minor visual edits made in Adobe Photoshop, and the final website was created using Webflow^[Link to webpage: https://covid-19-cycling.webflow.io/]. 
+
+# Data
+
+The overall narrative and structure of this project was largely guided and developed around the data I was able to obtain in relation to my topic. While I strived to use primary datasets and sources where available, this was not always possible and I had to make decisions to extract second hand data to visualize in some cases. This section outlines the data used to create the visualizations in my project, the thought process behind the visualizations, and a discussion of potential bias and limitations of the data that was used. 
+
+## Rails to Trails
+
+The first visualization on my webpage is a large area chart comparing trail usage in 2019 and 2020 using data from the non-profit organization, Rails-to-Trails Conservancy (RTC). According to their website, RTC’s goal is to bring more trails to communities, through the creation and linkage of rail-trails, which are public paths created from old railway corridors. The dataset was obtained from the RTC website and contains weekly counts of pedestrians and cyclists from RTC’s 31 trail counters across the United States in 2019 and 2020, along with the percentage change between 2019 and 2020. The final visualization is an area chart depicting differences in trail usage between 2019 and 2020, however I also tested a Cleveland Dot Plots visualization. The two versions of the graph are shown in Figure \@ref(fig:trails)
 
 ```{r, fig.width=8, echo=FALSE, include=FALSE}
-trails <- trails[-c(6:22)]
+#Preparing data for analysis
+trails <- trails[-c(6:22)] #removing empty rows and columns which got imported
 trails <- na.omit(trails)
 trails <- plyr::rename(trails, c("Week of" = "Week", "2019 Count" = "2019", 
                                  "2020 Count" = "2020", "Change 2019-2020" = "Change" ))
@@ -65,19 +76,8 @@ trails_new <- melt(trails)
 trails_new$variable <- relevel(trails_new$variable, ref = "2020")
 ```
 
-# Introduction
-
-As the covid-19 pandemic confined many people to their houses, and limited the use of public transit for commuters, cities across the world saw an uptake in cycling as both a hobby and alternative form of transportation. This report documents my development of a data driven, scrollytelling website which covers the covid-19 “bicycle boom”, using a combination of text and data visualization. My intention was to create a simple and concise, yet visually appealing and informative story about the surge of interest in cycling. This project is targeted towards a very general audience who may be interested in a quick read about the newfound interest in cycling during the pandemic. The language and graphs used in this project were meant to appeal to a wide range of people with varying experiences as cyclists, from individuals who may not cycle at all, to those who have been cycling for years. In terms of graphs, I selected simple and easily recognizable forms of data visualization so readers can clearly understand the information regardless of their level of statistical literacy. Overall, this project was meant to provide a holistic view of the bicycle boom while providing some higher level commentary on the benefits of cycling both in terms of health and as a form of community and personal engagement, as well as discussing the role of infrastructure and city planning to support the safety of new and existing cyclists. The datasets used in this project were processed in R [@citeR], visualizations were created in R, primarily using the `ggplot` package [@ggplot] along with minor visual edits made in Adobe Photoshop, and the final website was created using Webflow. 
-
-# Data
-
-The overall narrative and structure of this project was largely guided and developed around the data I was able to obtain in relation to my topic. While I strived to use primary datasets and sources where available, this was not always possible and I had to make decisions to extract second hand data to visualize in some cases. This section outlines the data used to create the visualizations in my project, the thought process behind the visualizations, and a discussion of potential bias and limitations of the data that was used. 
-
-## Rails to Trails
-
-The first visualization on my webpage is a large area chart comparing trail usage in 2019 and 2020 using data from the non-profit organization, Rails-to-Trails Conservancy (RTC). According to their website, RTC’s goal is to bring more trails to communities, through the creation and linkage of rail-trails, which are public paths created from old railway corridors. The dataset was obtained from the RTC website and contains weekly counts of pedestrians and cyclists from RTC’s 31 trail counters across the United States in 2019 and 2020, along with the percentage change between 2019 and 2020. The final visualization is an area chart depicting differences in trail usage between 2019 and 2020, however I also tested a Cleveland Dot Plots visualization. The two versions of the graph are shown in Figure \@ref(fig:trails)
-
 ```{r trails, fig.cap="Rails-to-Trails Conservancy: Trail Usage Graphs (top: area chart, bottom: Cleveland Dot Plots)", fig.post = "H", echo = FALSE, error=F, fig.width=11, fig.height=12}
+#area chart
 one <- trails_new %>%
   ggplot(aes(x = Week, y = value, fill = variable, group = variable)) +
   geom_area(alpha=1 , size=.5, colour="white", position = position_dodge(width = 0)) +
@@ -98,6 +98,7 @@ one <- trails_new %>%
   scale_fill_manual(values = c("#559e8e", "#e9896a"), labels = c("2020", "2019"), name = "Year") +
   ylab("Pedestrian and Bike Sightings")
 
+#dot plot showing changes from 2019 to 2020 per week
 two <- trails %>%
   ggplot() +
   geom_segment(aes(x = Week, xend = Week, y=`2019`, yend=`2020`)) +
@@ -120,10 +121,9 @@ two <- trails %>%
   scale_fill_manual(values = c("#e9896a", "#559e8e"), labels = c("2020", "2019"), name = "Year") +
   ylab("Pedestrian and Bike Sightings")
 
-
 grid.arrange(one, two)
 
-#ggsave(trailsgraph, file = "trailsgraph.png", width = 12)
+#ggsave(one, file = "trailsgraph.png", width = 12)
 ```
 
 
@@ -176,21 +176,21 @@ shiftNA <- shifting_streets_mobility %>%
 shiftNA <- shiftNA[!is.na(shiftNA$Function), ]
 #access to bikes mainly includes bike share, subsidizing bikes, bike parking
 #street space for ped/bike includes closing streets to motor vehicles, reallocating lane/curb space, shared street implementation
-shiftNA <- mutate(shiftNA, filling = ifelse((Function == "access to bikes" | Function == "other bike/ped supports" | Function == "street space for ped/bike"), "yes","no"))
 
-shiftNA %>%
-  filter(Function == "access to bikes" | Function == "other bike/ped supports" | Function == "street space for ped/bike")
+#creating variable indicating which actions should be coloured in the bar chart (bike related functions)
+shiftNA <- mutate(shiftNA, filling = ifelse((Function == "access to bikes" | Function == "other bike/ped supports" | Function == "street space for ped/bike"), "yes","no"))
 ```
 
 
 ```{r actionsfinal, fig.cap="Shifting Streets Covid-19 Mobility Data - Functions (Final Version)", echo = FALSE, fig.width=10}
+#final version of actions graph using functions attribute
 shiftNA %>%
   ggplot() +
   geom_bar(aes(x = fct_rev(fct_infreq(Function)), fill = filling), stat = "count") + coord_flip() +
   scale_x_discrete(labels = c("Influence planning", "Restrict transit mobility", "Boost transit", "Promote cars",
                               "Restrict pedestrian and biking mobility", "Access to bikes (bike share, bike parking, subsidies)", 
                               "Other supports for commerce", "Other supports for pedestrians and biking", "Miscellaneous actions",
-                              "Street space for commerce", "Street space for pedestrians and bikes")
+                              "Street space for commerce", "Street space for pedestrians and bikes") #renaming for clarity
                               ) +
   scale_fill_manual(values = c("#c9c0bd", "#559e8e")) + guides(fill = FALSE)  + 
       theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
@@ -209,6 +209,7 @@ shiftNA %>%
 
 
 ```{r actionsoriginal, fig.cap="Shifting Streets Covid-19 Mobility Data - Actions Version", echo = FALSE, fig.width=10}
+#bar chart example using action category (too crowded; too many individual actions)
 shiftNA %>%
   ggplot() +
   geom_bar(aes(x = fct_rev(fct_infreq(Application))), stat = "count") + coord_flip() +
@@ -232,13 +233,6 @@ The top figure depicts the final visualization which was used on the webpage. I 
 ## CAA Bike Safety Statistics
 
 Finally, I included two individual donut style graphics near the end of the webpage to highlight some statistics regarding people’s views on bike safety and infrastructure. The base donut charts were created in R, and embellished with vector icons taken from the flaticon database [@flaticon]. Text describing the statistics was added directly on the webpage, with a screenshot of the final result shown on the top of Figure \@ref(fig:CAAfinal). I also tested a version of the donut chart with labelled percentages in the middle rather than images, which is shown on the bottom of Figure \@ref(fig:CAAfinal), however I felt listing the percentages twice (once on the graphic and once in the text) was redundant, and the verison with the images was more visually appealing.
-
-
-```{r CAAfinal, fig.cap="CAA Bike Safety Statistics - Final Version", fig.post = "H", echo = FALSE, fig.align = "center", fig.height=7, out.width="75%"}
-knitr::include_graphics("CAAstats.png")
-```
-
-The statistics were pulled from a poll conducted by the Canadian Automobile Association (CAA) in June 2020 which surveyed 2,824 Canadians. Since the full survey data was not made public, the statistics were taken from the CAA official website and related press releases. However, like the sales growth data from the NPD group, an issue with using this type of second hand reported data is that we don’t have a good idea of how that data was collected and processed. In this case, aside from the sample size, I was unable to find much information about the polling methodologies and full range of questions which were asked. Additionally, since the CAA only posted certain statistics on their website rather than a full report of the polling results, there may also be some bias in the way they selectively chose which statistics to focus on. Of course, this also includes bias on my end for also choosing to present those statistics, however it was still important to provide context as to why cycling infrastructure is important from a human perspective regarding safety and how current infrastructure is preventing more people from cycling.
 
 ```{r, include=FALSE}
 #Single Statistics - CAA
@@ -290,6 +284,14 @@ forty <- ggplot(data.40, aes(ymax=ymax, ymin=ymin, xmax=4, xmin=3, fill=category
 #ggsave(forty, file = "forty.png")
 ```
 
+
+```{r CAAfinal, fig.cap="CAA Bike Safety Statistics - Final Version", fig.post = "H", echo = FALSE, fig.align = "center", fig.height=7, out.width="75%"}
+#imported image of edited donut charts with text from webpage
+knitr::include_graphics("CAAstats.png")
+```
+
+The statistics were pulled from a poll conducted by the Canadian Automobile Association (CAA) in June 2020 which surveyed 2,824 Canadians. Since the full survey data was not made public, the statistics were taken from the CAA official website and related press releases. However, like the sales growth data from the NPD group, an issue with using this type of second hand reported data is that we don’t have a good idea of how that data was collected and processed. In this case, aside from the sample size, I was unable to find much information about the polling methodologies and full range of questions which were asked. Additionally, since the CAA only posted certain statistics on their website rather than a full report of the polling results, there may also be some bias in the way they selectively chose which statistics to focus on. Of course, this also includes bias on my end for also choosing to present those statistics, however it was still important to provide context as to why cycling infrastructure is important from a human perspective regarding safety and how current infrastructure is preventing more people from cycling.
+
 # Formatting and Design Choices
 
 I selected a scrollytelling, or visual narrative format via a web page to share my visualizations and talk more about the covid-19 bike boom. In early brainstorming and development stages, I also considered creating a dashboard, however I felt this might be too limiting given the variety in data sources I utilized and the messaging I wanted to convey through text. When strategizing how to design and write for this project, I kept three main “variables” in mind: the data, the message, and the audience [@amabili2019storytelling]. 
@@ -297,6 +299,7 @@ I selected a scrollytelling, or visual narrative format via a web page to share 
 While I had a general idea of the messaging I wanted to convey, which was to provide an overview of the bicycle boom which occurred during the pandemic, I took a data driven approach as to how I structured the narrative of that messaging. I took note of the relevant data that was available to me with rough ideas of how to visualize it, and then tried to form a narrative around that data in a way that felt logical from a reader’s perspective while trying to locate gaps in the narrative that I did not have data for which could be supplemented with text. Using RTC trail usage and sales growth data from the NPD group I first wanted to focus on the “what” of the cycling boom by presenting evidence that the phenomenon exists as shown by increased bike sales and more people seen cycling. I then wanted to discuss why people may be cycling more during the pandemic. Since I wasn’t able to find data to visualize this part, I used brief text blurbs highlighting three potential reasons: transportation alternatives due to transit anxiety, exercise purposes, and the introduction of new programs and initiatives by cities to support cycling during the pandemic. The last point was meant to segway into the Shifting Streets dataset by providing more information showing the different ways in which cities have taken actions which impact cycling. Finally, I wanted to discuss the future of cycling after the pandemic, the benefits of cycling and why I hope the trend will continue, and further steps that should be taken to support and promote cycling. I highlighted concerns about infrastructure as a barrier to cycling in light of the CAA polling data conducted in June 2020, along with the fact that many of the infrastructure related actions reported in the Shifting Streets dataset were only temporary. Based on this narrative structure and with a rough idea of my data visualizations, I sketched a draft shown in Figure \@ref(fig:sketch) of how I planned to organize the graphical and textual elements of the story in a scrollytelling format on Webflow.
 
 ```{r sketch, fig.cap="Draft of Scrollytelling Webpage", fig.post = "H", echo = FALSE, fig.hesight=8, fig.height=10, out.width="100%", fig.align="center"}
+#imported image from procreate on ipad; sketch of web design
 knitr::include_graphics("web-draft.png")
 ```
 
@@ -305,16 +308,22 @@ When planning out how to incorporate aesthetic elements and themes, along with h
 I utilized colour to make the website and graphs visually interesting to look at, despite the simplicity of the structure. The colour palette I used is pictured below in Figure \@ref(fig:palette).
 
 ```{r palette, fig.cap="Colour Palette", fig.post = "H", echo = FALSE, fig.height=7, out.width="50%", fig.align="center"}
+#imported colour palette image; created
 knitr::include_graphics("palette.png")
 ```
 
-Despite the variety in the colour palette, the majority of the graphs and coloured elements in the project were somewhat monochromatic and centralized on the colour green, with the occasional orange and dark blue accent colour. I chose the colour green as a focal point for this project since it is generally viewed as a “positive” colour and is often associated with health and nature, and I wanted to highlight cycling in a positive light as a way to stay active and healthy. For visual accessibility purposes, I tried to use as much contrast as possible between the text and background colours (primarily the dark green and white colours). While I considered the usage of additional illustrated vectors alongside the text elements (such as illustrations of people biking), I ultimately decided to take a more simplistic approach in terms of illustrations to avoid too much visual overload. However, I did utilize some flat vector icons throughout the site, such as in the donut charts and in areas that I felt were heavy with text and could use some added visual elements. Aside from the graphs, the only other major visual component on the website is the cover image at the top, which is an edited photograph of a bicycle in front of a scenic backdrop. Although not outwardly obvious, this photograph was a personal touch as it was taken by my boyfriend during one of his cycling trips in 2020. I am not an avid cycler myself, but I was inspired to explore this topic for this project due to his enthusiasm for cycling and the stories he tells about the cycling community in Toronto. 
+Despite the variety in the colour palette, the majority of the graphs and coloured elements in the project were somewhat monochromatic and centralized on the colour green, with the occasional orange and dark blue accent colour. I chose the colour green as a focal point for this project since it is generally viewed as a “positive” colour and is often associated with health and nature, and I wanted to highlight cycling in a positive light as a way to stay active and healthy. For visual accessibility purposes, I tried to use as much contrast as possible between the text and background colours (primarily the dark green and white colours). While I considered the usage of additional illustrated vectors alongside the text elements (such as illustrations of people biking), I ultimately decided to take a more simplistic approach in terms of illustrations to avoid too much visual overload. However, I did utilize some flat vector icons throughout the site, such as in the donut charts and in areas that I felt were heavy with text and could use some added visual elements. Aside from the graphs, the only other major visual component on the website is the cover image at the top, which is an edited photograph of a bicycle in front of a scenic backdrop (Figure \@ref(fig:cover)). Although not outwardly obvious, this photograph was a personal touch as it was taken by my boyfriend during one of his cycling trips in 2020. I am not an avid cyclist myself, but I was inspired to explore this topic for this project due to his enthusiasm for cycling and the stories he tells about the cycling community in Toronto. 
+
+```{r cover, fig.cap="Website Cover Image: Original Photo and Final Edit", fig.post = "H", echo = FALSE, out.width="80%", fig.align="center"}
+#imported cover images
+knitr::include_graphics("bikecover.png")
+```
 
 # Weaknesses and Limitations
 
 While reflecting on various aspects of my design process and choices, along with the completed project, I wanted to address my own personal biases and ways in which the project could be improved. I previously addressed limitations to the data used in this project, however there are also personal biases in the way I chose to interpret and present some of the data as an analyst and designer. Some of the data used in this project is likely not limited to just bikes and cyclists, but also walking and other forms of active transportation as well. For example, the counts in the RTC trail usage data include both pedestrian and bike sightings, and it would be fair to assume bike trails are not exclusively used to cycle, meaning that data likely contains people who were walking or running as well, since the data does not specify it only includes cyclists. Similarly, many of the actions in the Shifting Street dataset, including those in the largest category “street space for pedestrians and bikes” include actions designed to support both walking and cycling, and again are not limited to just specific actions which support cycling. I made sure to label these graph components correctly to indicate these counts and actions include general pedestrians as well instead of just bikes, but I understand the way the data is presented in the overall contextual narrative of a bicycle boom might mean these numbers are interpreted as only counting cyclists.
 
-Another source of personal bias was my attempt to portray cycling in a positive light. While it is true that cycling comes with all of the positive benefits I discuss in the project, cycling fatalities remain a prominent issue even during the pandemic. I briefly discussed bike safety in the context of infrastructure, however this project makes no explicit reference to cycling fatalities. There are some reports which suggest cycling fatality rates either rose or stayed the same despite less cars being on the road and the implementation of new bike lanes [@fatal], however there I was unable to find more data on this. During my initial research and development stages, I did not come across any data about cycling fatalities during the pandemic, nor did it occur to me at the time to do more research on that particular aspect of the bicycle boom. After reflecting on the project and subject matter, I realize it may have been a personal bias on my part to not include more information on the dangers of cycling. Given the circumstances of covid-19, I wanted to create a project focusing on what I consider to be a more positive story which came out of the pandemic and highlight the benefits of cycling, however in doing so I may have neglected to acknowledge some of the more dangerous aspects of cycling involving fatalities. 
+Another source of personal bias was my attempt to portray cycling in a positive light. While it is true that cycling comes with all of the positive benefits I discuss in the project, cycling fatalities remain a prominent issue even during the pandemic. I briefly discussed bike safety in the context of infrastructure, however this project makes no explicit reference to cycling fatalities. There are some reports which suggest cycling fatality rates either rose or stayed the same despite less cars being on the road and the implementation of new bike lanes [@fatal], however there I was unable to find more data on this. During my initial research and development stages, I did not come across any data about cycling fatalities during the pandemic, nor did it occur to me at the time to do more research on that particular aspect of the bicycle boom. After reflecting on the project and subject matter, I realize it may have been a personal bias on my part to not include more information on the dangers of cycling. Given the circumstances of covid-19, I wanted to create a project focusing on what I consider to be a more positive story which came out of the pandemic and highlight the benefits of cycling, however in doing so I may have neglected to acknowledge some of the more dangerous aspects of cycling involving fatalities and road accidents. 
 
 Regarding the project itself, there are some aspects I would have liked to improve upon or add if I had more time to learn and familiarize myself with the tools necessary to do so. One thing the project could have benefitted from was the ability to interact with some of the graphs. For instance, it would have been interesting to highlight certain weeks on the area chart depicting trail usage and see more specific number counts, or the percentage growth in ridership between 2019 and 2020. The visual narrative might have been more compelling if readers were able to directly engage and interact with the data rather than passively viewing static charts. In some ways, the project was limited by my own technical abilities and comfort levels. Since I had little to no prior experience doing web design or working with html and CSS, I primarily relied on the basic features of Webflow’s digital editor combined with my existing knowledge of R and ggplot to create the graphs. However, I acknowledge the limitations of only working with what I am familiar with, and believe experimenting with other platforms and techniques would have been helpful to the overall design process and finished product. I would be interested in revisiting this project in the future and incorporating more interactive elements if more data on this topic ever gets released. 
 
